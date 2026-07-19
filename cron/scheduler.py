@@ -1912,6 +1912,16 @@ def _deliver_result(job: dict, content: str, adapters=None, loop=None) -> Option
                             user_id=origin_user_id,
                             chat_name=origin.get("chat_name"),
                         )
+                    # Explicit thread: ensure session exists before mirror
+                    # (the session may not have started yet — e.g. a daily cron
+                    # before the user's first message in that thread).
+                    if not thread_seeded and not inchannel_seeded and mirror_this_target and thread_id and not in_channel_surface:
+                        _seed_cron_thread_session(
+                            job, runtime_adapter, platform_name, chat_id,
+                            thread_id, mirror_text,
+                            chat_name=origin.get("chat_name"),
+                        )
+                        thread_seeded = True
                     _maybe_mirror_cron_delivery(
                         job, platform_name, chat_id, mirror_text,
                         thread_id=thread_id, user_id=origin_user_id,
